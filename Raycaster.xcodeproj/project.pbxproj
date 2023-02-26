@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		348D8FF329AC05FA005AE66F /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 348D8FF229AC05FA005AE66F /* main.c */; };
+		348D8FFB29AC0618005AE66F /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 348D8FFA29AC0618005AE66F /* OpenGL.framework */; };
+		348D8FFD29AC0701005AE66F /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 348D8FFC29AC0701005AE66F /* GLUT.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +27,8 @@
 /* Begin PBXFileReference section */
 		348D8FEF29AC05FA005AE66F /* Raycaster */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Raycaster; sourceTree = BUILT_PRODUCTS_DIR; };
 		348D8FF229AC05FA005AE66F /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		348D8FFA29AC0618005AE66F /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		348D8FFC29AC0701005AE66F /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -32,6 +36,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				348D8FFD29AC0701005AE66F /* GLUT.framework in Frameworks */,
+				348D8FFB29AC0618005AE66F /* OpenGL.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -43,6 +49,7 @@
 			children = (
 				348D8FF129AC05FA005AE66F /* Raycaster */,
 				348D8FF029AC05FA005AE66F /* Products */,
+				348D8FF929AC0618005AE66F /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,6 +67,15 @@
 				348D8FF229AC05FA005AE66F /* main.c */,
 			);
 			path = Raycaster;
+			sourceTree = "<group>";
+		};
+		348D8FF929AC0618005AE66F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				348D8FFC29AC0701005AE66F /* GLUT.framework */,
+				348D8FFA29AC0618005AE66F /* OpenGL.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -179,6 +195,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
+				NEW_SETTING = "";
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
 			};
@@ -231,6 +248,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 13.1;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
+				NEW_SETTING = "";
 				SDKROOT = macosx;
 			};
 			name = Release;
@@ -242,6 +260,7 @@
 				DEVELOPMENT_TEAM = CMJ553K76W;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALIDATE_PRODUCT = NO;
 			};
 			name = Debug;
 		};
@@ -252,6 +271,7 @@
 				DEVELOPMENT_TEAM = CMJ553K76W;
 				ENABLE_HARDENED_RUNTIME = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				VALIDATE_PRODUCT = NO;
 			};
 			name = Release;
 		};
