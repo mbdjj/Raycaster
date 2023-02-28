@@ -2,7 +2,7 @@
 //  main.c
 //  Raycaster
 //
-//  Created by Marcin Bartminski on 26/02/2023.
+//  Created by Marcin Bartminski and Bartosz Przewozny on 26/02/2023.
 //
 
 #ifdef __APPLE__
@@ -11,6 +11,8 @@
 #include <stdlib.h>
 #include <GLUT/glut.h>
 #include <math.h>
+#include "Textures/sprites.ppm"
+#include "Textures/lost.ppm"
 
 float degToRad(float a) {
     return a*M_PI/180.0;
@@ -30,12 +32,14 @@ float distance(ax, ay, bx, by, ang) {
 float px, py, pdx, pdy, pa;
 float frame1, frame2, fps;
 
-typedef struct {
-    int w, a, d, s;                     // Stany przycisków (włączony / wyłączony)
+int gameState=0, timer=0; // Stan gry
+
+typedef struct { // Stany przycisków (włączony / wyłączony)
+    int w, a, d, s;
 } ButtonKeys;
 ButtonKeys Keys;
 
-int All_Textures[] = {                // Wszystkie tekstury 32x32
+int All_Textures[] = { // Wszystkie tekstury 32x32
     // Szachownica
     0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,
     0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1, 0,0,0,0,0,0,0,0, 1,1,1,1,1,1,1,1,
@@ -221,74 +225,113 @@ int mapC[] = {       // Sufit
     0,0,0,0,0,0,0,0,
 };
 
-void drawMap2D() {
-    int x, y, xo, yo;
-    for (y = 0; y < mapY; y++) {
-        for (x = 0; x < mapX; x++) {
-            if (mapW[y * mapX + x] > 0) {
-                glColor3f(1, 1, 1);
-            } else {
-                glColor3f(0, 0, 0);
+typedef struct { // Wszystkie zmienne sprite
+     int type; // static, key, enemy
+     int state; // włączony wyłączony
+     int map; // textura
+     float x, y, z; // położenie
+} sprite; sprite sp[4];
+int depth[120];
+
+void drawSprite() {
+    int x, y, s;
+    if (px < sp[0].x + 30 && px > sp[0].x - 30 && py < sp[0].y + 30 && py > sp[0].y - 30) { // Podnoszenie klucza
+        sp[0].state = 0;
+    }
+    if (px < sp[3].x + 30 && px > sp[3].x - 30 && py < sp[3].y + 30 && py > sp[3].y - 30) { // Przeciwnik zabija
+        gameState = 1;
+    }
+
+    // Atak przeciwnika
+    int spx = (int)sp[3].x >> 6, // Normalna pozycja
+    spy = (int)sp[3].y >> 6;
+    
+    int spx_add = ((int)sp[3].x + 15) >> 6, // Normalna pozycja plus offset
+    spy_add = ((int)sp[3].y + 15) >> 6;
+    
+    int spx_sub = ((int)sp[3].x - 15) >> 6, // Normalna pozycja minus offset
+    spy_sub = ((int)sp[3].y - 15) >> 6;
+     
+    if (sp[3].x > px && mapW[spy * 8 + spx_sub] == 0) {
+        sp[3].x -= 0.04 * fps;
+    }
+    if (sp[3].x < px && mapW[spy * 8 + spx_add] == 0) {
+        sp[3].x += 0.04 * fps;
+    }
+    if (sp[3].y > py && mapW[spy_sub * 8 + spx] == 0) {
+        sp[3].y -= 0.04 * fps;
+    }
+    if (sp[3].y < py && mapW[spy_add * 8 + spx] == 0) {
+        sp[3].y += 0.04 * fps;
+    }
+
+    for (s = 0; s < 4; s++) {
+        float sx = sp[s].x - px; // Tymczasowe zmienne float
+        float sy = sp[s].y - py;
+        float sz = sp[s].z;
+    
+        float CS = cos(degToRad(pa)), SN = sin(degToRad(pa)); // Obrót dookoła
+        float a = sy * CS + sx * SN;
+        float b = sx * CS - sy * SN;
+        sx = a;
+        sy = b;
+    
+        sx = (sx * 108.0 / sy) + (120 / 2); // Zamiana na x i y ekranu
+        sy = (sz * 108.0 / sy) + (80 / 2);
+    
+        int scale = 32 * 80 / b;   //Skalowanie sprite na podstawie odległosći
+          
+        if (scale < 0) {
+            scale = 0;
+        }
+        if (scale > 120) {
+            scale = 120;
+        }
+    
+        // Textura
+        float t_x = 0, t_y = 31, t_x_step = 31.5 / (float)scale, t_y_step = 32.0 / (float)scale;
+    
+        for (x = sx - scale / 2; x < sx + scale / 2; x++) {
+            t_y = 31;
+            for (y = 0; y < scale; y++) {
+                if (sp[s].state == 1 && x > 0 && x < 120 && b < depth[x]) {
+                    int pixel = ((int)t_y*32 + (int)t_x) * 3 + (sp[s].map * 32 * 32 * 3);
+                    int red = sprites[pixel + 0];
+                    int green = sprites[pixel + 1];
+                    int blue = sprites[pixel + 2];
+                    if (red != 255, green != 0, blue != 255) {
+                        glPointSize(8);
+                        glColor3ub(red, green, blue);
+                        glBegin(GL_POINTS);
+                        glVertex2i(x * 8,sy * 8 - y * 8);
+                        glEnd(); // Rysowanie punktu
+                    }
+                    t_y -= t_y_step;
+                    if (t_y < 0) {
+                        t_y = 0;
+                    }
+                }
             }
-            xo=x*mapS;
-            yo=y*mapS;
-            glBegin(GL_QUADS);
-            glVertex2i(0 + xo + 1, 0 + yo + 1);
-            glVertex2i(0 + xo + 1, mapS + yo - 1);
-            glVertex2i(mapS + xo - 1, mapS + yo - 1);
-            glVertex2i(mapS + xo - 1, 0 + yo + 1);
-            glEnd();
+            t_x += t_x_step;
         }
     }
 }
 
 
-//------------------------GRACZ------------------------------------------------
-void drawPlayer2D() {
-    glColor3f(1, 1, 0);
-    glPointSize(8);
-    glLineWidth(4);
-    
-    glBegin(GL_POINTS);
-    glVertex2i(px, py);
-    glEnd();
-    
-    glBegin(GL_LINES);
-    glVertex2i(px, py);
-    glVertex2i(px + pdx * 20, py + pdy * 20);
-    glEnd();
-}
-
-
-//---------------------------Rysiwanie promieni i ścian--------------------------------
+//---------------------------Rysiwanie promieni i úcian--------------------------------
 void drawRays2D() {
-    glColor3f(0, 1, 1);
-    glBegin(GL_QUADS);
-    glVertex2i(526, 0);
-    glVertex2i(1006, 0);
-    glVertex2i(1006, 160);
-    glVertex2i(526, 160);
-    glEnd();
-    
-    glColor3f(0, 0, 1);
-    glBegin(GL_QUADS);
-    glVertex2i(526, 160);
-    glVertex2i(1006, 160);
-    glVertex2i(1006, 320);
-    glVertex2i(526, 320);
-    glEnd();
     
     int r, mx, my, mp, dof, side;
     float vx, vy, rx, ry, ra, xo, yo, disV, disH;
  
     ra = FixAng(pa + 30);
  
-    for (r = 0; r < 60; r++) {
+    for (r = 0; r < 120; r++) {
         int vmt = 0, hmt = 0;
         //---Pionowo---
-        dof=0;
-        side=0;
-        disV=100000;
+        dof = 0;
+        side = 0;
+        disV = 100000;
         float Tan = tan(degToRad(ra));
         if (cos(degToRad(ra)) > 0.001) { // Patrzenie w lewo
             rx = (((int)px >> 6) << 6) + 64;
@@ -371,25 +414,21 @@ void drawRays2D() {
             disH = disV;
             glColor3f(0, 0.6, 0);
         }
-        
-        glLineWidth(2);
-        glBegin(GL_LINES);
-        glVertex2i(px, py);
-        glVertex2i(rx, ry);
-        glEnd(); // Rysowanie promienia 2D
     
         int ca = FixAng(pa - ra); // Naprawianie efektu rybiego oka
         disH = disH * cos(degToRad(ca));
-        int lineH = (mapS * 320) / (disH);
+        int lineH = (mapS * 640) / (disH);
         float ty_step = 32.0 / (float) lineH;
         float ty_off = 0;
         
-        if (lineH > 320) { // Długość linii i limit
-            ty_off = (lineH - 320) / 2.0;
-            lineH = 320;
+        if (lineH > 640) { // Długość linii i limit
+            ty_off = (lineH - 640) / 2.0;
+            lineH = 640;
         }
-        int lineOff = 160 - (lineH >> 1);
-
+        int lineOff = 320 - (lineH >> 1);
+        
+        depth[r] = disH;
+        
         //---Rysowanie ścian---
         int y;
         float ty = ty_off * ty_step + hmt * 32;
@@ -422,23 +461,23 @@ void drawRays2D() {
             }
             glPointSize(8); // Rysowanie pionowych ścian
             glBegin(GL_POINTS);
-            glVertex2i(r * 8 + 530, y + lineOff);
+            glVertex2i(r * 8, y + lineOff);
             glEnd();
             ty += ty_step;
         }
  
         //---Rysowanie podłóg---
-        for (y = lineOff + lineH; y < 320; y++) {
-            float dy = y - (320 / 2.0), deg = degToRad(ra), raFix = cos(degToRad(FixAng(pa - ra)));
-            tx = px / 2 + cos(deg) * 158 * 32 / dy / raFix;
-            ty = py / 2 - sin(deg) * 158 * 32 / dy / raFix;
+        for (y = lineOff + lineH; y < 640; y++) {
+            float dy = y - (640 / 2.0), deg = degToRad(ra), raFix = cos(degToRad(FixAng(pa - ra)));
+            tx = px / 2 + cos(deg) * 158 * 2 * 32 / dy / raFix;
+            ty = py / 2 - sin(deg) * 158 * 2 * 32 / dy / raFix;
             int mp = mapF[(int) (ty / 32.0) * mapX + (int) (tx / 32.0)] * 32 * 32;
             float c = All_Textures[((int)(ty)&31) * 32 + ((int)(tx)&31) + mp] * 0.7;
             
             glColor3f(c / 1.3, c / 1.3, c);
             glPointSize(8);
             glBegin(GL_POINTS);
-            glVertex2i(r * 8 + 530, y);
+            glVertex2i(r * 8, y);
             glEnd();
 
             //---Rysowanie sufitu---
@@ -448,23 +487,73 @@ void drawRays2D() {
             glColor3f(c / 2.0, c / 1.2, c / 2.0);
             glPointSize(8);
             glBegin(GL_POINTS);
-            glVertex2i(r * 8 + 530, 320 - y);
+            glVertex2i(r * 8, 640 - y);
             glEnd();
         }
  
-        ra = FixAng(ra - 1);
+        ra = FixAng(ra - 0.5);
+    }
+}
+
+void screen(int v) { // Rysowanie pełnoekranowych obrazków. 120x80 pikseli
+    int x, y;
+    int *T;
+    if (v == 1) {
+        T = lost;
+    }
+    for (y = 0; y < 80; y++) {
+        for (x = 0; x < 120; x++) {
+            int pixel = (y * 120 + x) * 3;
+            int red = T[pixel + 0];
+            int green = T[pixel + 1];
+            int blue = T[pixel + 2];
+            
+            glPointSize(8);
+            glColor3ub(red, green, blue);
+            glBegin(GL_POINTS);
+            glVertex2i(x * 8, y * 8);
+            glEnd();
+        }
     }
 }
 
 
 void init() {
     glClearColor(0.3, 0.3, 0.3, 0);
-    gluOrtho2D(0, 1024, 510, 0);
+    gluOrtho2D(0, 960, 640, 0);
     px = 150;
     py = 400;
     pa = 90;
     pdx = cos(degToRad(pa));
     pdy = -sin(degToRad(pa));
+    
+    sp[0].type = 1; // Klucz
+    sp[0].state = 1;
+    sp[0].map = 0;
+    sp[0].x = 1.5 * 64;
+    sp[0].y = 5 * 64;
+    sp[0].z = 20;
+     
+    sp[1].type = 2; // Światło 1
+    sp[1].state = 1;
+    sp[1].map = 1;
+    sp[1].x = 1.5 * 64;
+    sp[1].y = 4.5 * 64;
+    sp[1].z = 0;
+     
+    sp[2].type = 2; // Światło 2
+    sp[2].state = 1;
+    sp[2].map = 1;
+    sp[2].x = 3.5 * 64;
+    sp[2].y = 4.5 * 64;
+    sp[2].z = 0;
+     
+    sp[3].type = 3; // Przeciwnik
+    sp[3].state = 1;
+    sp[3].map = 2;
+    sp[3].x = 2.5 * 64;
+    sp[3].y = 2 * 64;
+    sp[3].z = 20;
 }
 
 void display() {
@@ -523,19 +612,25 @@ void display() {
     glutPostRedisplay();
  
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    drawMap2D();
-    drawPlayer2D();
     drawRays2D();
+    drawSprite();
+    
+    if(gameState == 1) { // Przegranko
+        screen(1);
+    }
+    
     glutSwapBuffers();
 }
 
-void ButtonDown(unsigned char key,int x,int y) { //Przycisk na klawiaturze wciśnięty
+
+
+void ButtonDown(unsigned char key,int x,int y) { // Przycisk na klawiaturze wciśnięty
  
     if (key == 'a') { Keys.a = 1; }
     if (key == 'd') { Keys.d = 1; }
     if (key == 'w') { Keys.w = 1; }
     if (key == 's') { Keys.s = 1; }
-    if(key=='e') { // Otwieranie drzwi
+    if(key == 'e' && sp[0].state == 0) { // Otwieranie drzwi
         int xo = 0;
         if (pdx < 0) {
             xo = -25;
@@ -569,14 +664,14 @@ void ButtonUp(unsigned char key,int x,int y) { // Przycisk na klawiaturze puszcz
 }
 
 void resize(int w,int h) {
-    glutReshapeWindow(1024, 512);
+    glutReshapeWindow(960, 640);
 }
 
 int main(int argc, char* argv[]) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
-    glutInitWindowSize(1024, 510);
-    glutInitWindowPosition(200, 200);
+    glutInitWindowSize(960, 640);
+    glutInitWindowPosition(glutGet(GLUT_SCREEN_WIDTH) / 2 - 960 / 2 ,glutGet(GLUT_SCREEN_HEIGHT) / 2 - 640 / 2);
     glutCreateWindow("Raycaster - Marcin Bartmiński, Bartosz Przewoźny");
     init();
     glutDisplayFunc(display);
@@ -585,3 +680,5 @@ int main(int argc, char* argv[]) {
     glutKeyboardUpFunc(ButtonUp);
     glutMainLoop();
 }
+
+

@@ -25,6 +25,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		342D350129ADB94100A49024 /* lost.ppm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = lost.ppm; sourceTree = "<group>"; };
+		342D350229ADB94100A49024 /* sprites.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = sprites.bmp; sourceTree = "<group>"; };
+		342D350329ADB94100A49024 /* sprites.ppm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = sprites.ppm; sourceTree = "<group>"; };
+		342D350429ADB94100A49024 /* lost.bmp */ = {isa = PBXFileReference; lastKnownFileType = image.bmp; path = lost.bmp; sourceTree = "<group>"; };
 		348D8FEF29AC05FA005AE66F /* Raycaster */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Raycaster; sourceTree = BUILT_PRODUCTS_DIR; };
 		348D8FF229AC05FA005AE66F /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		348D8FFA29AC0618005AE66F /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
@@ -44,6 +48,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		342D350029ADB94100A49024 /* Textures */ = {
+			isa = PBXGroup;
+			children = (
+				342D350129ADB94100A49024 /* lost.ppm */,
+				342D350229ADB94100A49024 /* sprites.bmp */,
+				342D350329ADB94100A49024 /* sprites.ppm */,
+				342D350429ADB94100A49024 /* lost.bmp */,
+			);
+			path = Textures;
+			sourceTree = "<group>";
+		};
 		348D8FE629AC05FA005AE66F = {
 			isa = PBXGroup;
 			children = (
@@ -65,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				348D8FF229AC05FA005AE66F /* main.c */,
+				342D350029ADB94100A49024 /* Textures */,
 			);
 			path = Raycaster;
 			sourceTree = "<group>";
